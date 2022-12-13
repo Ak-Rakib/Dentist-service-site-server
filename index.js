@@ -17,6 +17,22 @@ const client = new MongoClient(uri, {
   serverApi: ServerApiVersion.v1,
 });
 
+
+// JWT middleware
+function verifyJwt( req, res, next ){
+  const authHeader = req.headers.authorization;
+  if(!authHeader){
+   return res.status(401).send('unauthorize access')
+  }
+  const token = authHeader.split(' ')[1];
+  jwt.verify(token, process.env.DB_JWT_TOKEN, function(err, decoded) {
+    if(err)
+    return res.status(401).send('unauthorize access');
+  })
+  req.decoded = decoded;
+  next();
+}
+
 async function run() {
   try {
 
@@ -68,7 +84,11 @@ async function run() {
     });
 
 
-    app.get("/booking", async (req, res) => {
+    app.get("/booking", verifyJwt, async (req, res) => {
+      const decodedEmail = decoded.email;
+      if(decodedEmail != email){
+        return res.status(403).send({message: 'unauthorize access'})
+      }
       const email = req.query.email;
       const query = { email: email };
       const result = await bookingCollection.find(query).toArray();
@@ -81,7 +101,7 @@ async function run() {
       const query = {email: email}
       const user = await usersCollection.findOne(query)
       if(user){
-        const token = jwt.sign(email, process.env.DB_JWT_TOKEN, {expiresIn: "1h"})
+        const token = jwt.sign({email}, process.env.DB_JWT_TOKEN, {expiresIn: "1h"})
         return res.send({AccessToken: token })
       }
          res.status(403).send({AccessToken: 'unauthorize access'})
