@@ -86,7 +86,7 @@ async function run() {
 
     app.get("/booking", verifyJwt, async (req, res) => {
       const decodedEmail = decoded.email;
-      if(decodedEmail != email){
+      if(decodedEmail !== email){
         return res.status(403).send({message: 'unauthorize access'})
       }
       const email = req.query.email;
@@ -107,6 +107,11 @@ async function run() {
          res.status(403).send({AccessToken: 'unauthorize access'})
     })
 
+    app.get('/user', async(req, res) => {
+      const query = {}
+      const user = await usersCollection.find(query).toArray()
+      res.send(user);
+    })
 
     app.post('/user', async (req, res) => {
       const user = req.body;
