@@ -1,5 +1,5 @@
 const express = require("express");
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const jwt = require('jsonwebtoken');
 const cors = require("cors");
 const app = express();
@@ -117,6 +117,19 @@ async function run() {
       const user = req.body;
       console.log(user)
       const result = await usersCollection.insertOne(user);
+      res.send(result);
+    })
+
+    app.put('/user/admin:id', async(req,res) =>{
+      const id = req.params.id;
+      const filter = { _id: ObjectId(id) };
+      const option = { upsert: true }
+      updateDoc = {
+        $set: {
+          role: "Admin"
+        }
+      }
+      const result = await usersCollection.updateOne(filter, updateDoc, option);
       res.send(result);
     })
 
